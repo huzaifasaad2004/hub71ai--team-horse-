@@ -34,3 +34,5 @@ Public URL: https://hub71ai-team-horse.vercel.app
 Email and password signup is enabled. Google login is optional and deferred. The Abu Dhabi assistant supports three guest questions per network per day, with a persistent shared cap of 50 guest questions daily. Signed-in users share the ten daily planner requests. Password resets and email verification need an email provider before they can be enabled.
 
 The family plan prioritises partner careers and friendships, children’s settling-in routines, and practical preparation before arrival. Plans and completion are saved explicitly to the signed-in user’s account.
+
+The public root URL is the introductory family relocation landing page. The application is at /dashboard; /dashboard?start=1 starts a blank household, and /dashboard?signup=1 opens email signup.
