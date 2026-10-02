@@ -1,4 +1,10 @@
-// Intentionally empty by default.
-// Add Drizzle tables here when the site actually needs a database.
-// See examples/d1/db/schema.ts for an opt-in example.
-export {};
+import {pgTable,text,boolean,timestamp,integer,bigint,jsonb,primaryKey,index,uniqueIndex} from 'drizzle-orm/pg-core';
+import type {Snapshot} from '../lib/snapshot';
+const dates={createdAt:timestamp('created_at',{withTimezone:true}).notNull().defaultNow(),updatedAt:timestamp('updated_at',{withTimezone:true}).notNull().defaultNow()};
+export const user=pgTable('users',{id:text('id').primaryKey(),name:text('name').notNull(),email:text('email').notNull().unique(),emailVerified:boolean('email_verified').notNull().default(false),image:text('image'),...dates});
+export const session=pgTable('sessions',{id:text('id').primaryKey(),userId:text('user_id').notNull().references(()=>user.id,{onDelete:'cascade'}),token:text('token').notNull().unique(),expiresAt:timestamp('expires_at',{withTimezone:true}).notNull(),ipAddress:text('ip_address'),userAgent:text('user_agent'),...dates},t=>[index('sessions_user_idx').on(t.userId)]);
+export const account=pgTable('accounts',{id:text('id').primaryKey(),userId:text('user_id').notNull().references(()=>user.id,{onDelete:'cascade'}),accountId:text('account_id').notNull(),providerId:text('provider_id').notNull(),accessToken:text('access_token'),refreshToken:text('refresh_token'),idToken:text('id_token'),accessTokenExpiresAt:timestamp('access_token_expires_at',{withTimezone:true}),refreshTokenExpiresAt:timestamp('refresh_token_expires_at',{withTimezone:true}),scope:text('scope'),password:text('password'),...dates},t=>[index('accounts_user_idx').on(t.userId),uniqueIndex('accounts_provider_idx').on(t.providerId,t.accountId)]);
+export const verification=pgTable('verifications',{id:text('id').primaryKey(),identifier:text('identifier').notNull(),value:text('value').notNull(),expiresAt:timestamp('expires_at',{withTimezone:true}).notNull(),...dates},t=>[index('verification_identifier_idx').on(t.identifier)]);
+export const rateLimit=pgTable('auth_rate_limits',{id:text('id').primaryKey(),key:text('key').notNull().unique(),count:integer('count').notNull(),lastRequest:bigint('last_request',{mode:'number'}).notNull()});
+export const household=pgTable('households',{userId:text('user_id').primaryKey().references(()=>user.id,{onDelete:'cascade'}),snapshot:jsonb('snapshot').$type<Snapshot>().notNull(),version:integer('version').notNull(),updatedAt:timestamp('updated_at',{withTimezone:true}).notNull().defaultNow()});
+export const usage=pgTable('daily_usage',{userId:text('user_id').notNull().references(()=>user.id,{onDelete:'cascade'}),day:text('day').notNull(),action:text('action').notNull(),count:integer('count').notNull()},t=>[primaryKey({columns:[t.userId,t.day,t.action]})]);

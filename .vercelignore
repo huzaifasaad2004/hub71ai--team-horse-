@@ -1,0 +1,8 @@
+build/
+examples/
+vite.config.ts
+cloudflare-env.d.ts
+.openai/
+.sites-runtime/
+work/
+.env*

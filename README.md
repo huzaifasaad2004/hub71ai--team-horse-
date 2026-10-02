@@ -1,25 +1,12 @@
 # BRIDGE
 
-A personal Abu Dhabi relocation dashboard. This redesign replaces the original long forms and linear text-heavy flow with a working dashboard, three short setup steps, discovery tabs, a weekly board and a compact introduction editor.
+A personal Abu Dhabi dashboard with flexible household setup, food and area preferences, Google Maps discovery, voice input, weekly planning and earned badges.
 
-## What works now
+This repository runs native Next.js on Vercel. Visitors can explore the fictional sample and create a plan. Google sign-in unlocks live APIs and saved plans. Account data and household plans use Neon PostgreSQL. Save my plan persists the current household, choices, draft, favourites and progress; signing in restores the saved plan. Google place IDs are saved, while venue details are refreshed rather than stored.
 
-- Flexible household editor: up to 20 people, including multiple partners and children. Names/nicknames are the only required typed fields. Adult goals, interests and things to avoid use multiselect chips with custom entries.
-- Food tastes, dietary preferences, dislikes, dining budget, neighbourhood vibes, transport and settling-in availability.
-- Deterministic personalization from explicit choices, without requiring AI credentials. Area ranking shows the actual matching tags, never a fabricated suitability score. Source-backed education cards retain original links.
-- Dashboard with licensed photography, an SVG brand mark, real completion rings and track bars. XP and earned badges reflect completed preparation tasks, not wellbeing or relocation readiness.
-- Weekly board, preparation-minute chart, completion controls, lighter schedule and completion preservation.
-- Saved steps, places and areas, accessible detail dialogs, editable introductions and copy, draft replacement confirmation, preparation checklist and session reset.
-- Microphone recording, 90-second stop, playback and download in compatible localhost/HTTPS browsers. Audio uploads only when Use voice note is selected. Transcription adapter needs server configuration; hardware recording was not tested by the agent on the user's microphone.
-- Public Etihad career retrieval and ADEK education source retrieval; Cultural Foundation is a manually checked guide. Career coverage is one employer.
-- Google Maps search handoff works without a key. Server Google Places Text Search adapter returns genuine live names, addresses, ratings and Maps links when `GOOGLE_PLACES_API_KEY` is configured. Missing keys and provider failures produce an honest unavailable state. No live Places call has been verified with a real credential.
-- Social discovery uses adult interests and avoidance preferences. Optional social profile links stay in the session; no social account is connected and no private feeds are read. Recommendations from social-media content remain pending a supported provider connection.
+## Run
 
-The first dashboard contains a clearly labeled fictional sample household. Make it mine starts your own household. Choices invalidate derived plans; rebuild from the last setup step or dashboard. Refresh resets the session. No account database or cross-device persistence is implemented.
-
-## Run and check
-
-Use the original npm lockfile and Node 22.13+:
+Use Node 24 and npm. Copy `.env.example` to `.env.local` and fill server credentials locally. Never commit real values.
 
 ```sh
 npm ci
@@ -30,35 +17,20 @@ npm run lint
 npm run build
 ```
 
-Local development URL: http://127.0.0.1:5173/. The temporary task-local npm CLI and Codex bundled Node are documented in the handoff. The app remains a Vinext/React/Cloudflare Worker project; GitHub Pages alone cannot run its server endpoints.
+Local URL: http://127.0.0.1:5173. Run database migrations with `DATABASE_URL` set: `npm run db:migrate`.
 
-Fourteen domain tests cover sample contracts, reference integrity, source validation/failure/cache behavior, stale-state invalidation, AI repair boundaries, flexible households, preference-driven area matching, personalized templates, and mocked Google Places normalization. Browser QA includes five-person custom setup with two partners/two children, custom food chips, neighbourhood changes, week completion/lighter mode, mobile layouts, dialogs, draft edit/copy, saves and the missing-key discovery state. Test results and publication status are recorded in `../HANDOFF.txt`.
+## Deploy and Google login
 
-## Connections
+Import this repository to Vercel with the Next.js preset and root directory `./`. Configure the variables in `.env.example` in the Production environment. The Google OAuth Web application callback must exactly match `BETTER_AUTH_URL` plus `/api/auth/callback/google`. See [GOOGLE_SETUP.md](GOOGLE_SETUP.md). The OAuth client is separate from the Places API key.
 
-See [GOOGLE_SETUP.md](GOOGLE_SETUP.md) for Google Cloud setup. Maps/Places and Google login are separate capabilities. The current Sites starter supports platform-owned ChatGPT sign-in, not app-owned external Google OAuth. Google login has not been enabled. Its account panel says setup is needed; no fake signed-in identity is created.
+Better Auth verifies sessions on the server. Household reads and writes use the verified account ID, never a client-supplied owner ID. Saves use a version check to prevent another device’s changes from being overwritten. Live provider requests require sign-in and have persistent daily per-user limits: 10 AI requests, 10 transcriptions, 50 Maps searches or saved-place refreshes. Voice uploads are capped at 3 MB and recordings stop after 90 seconds.
 
-Server runtime values, only through supported secret configuration:
+Audio and optional stories are sent to OpenAI only when requested and are not retained by BRIDGE. Social discovery uses explicit interests and dislikes; social profile links do not authorize reading feeds. Area guides have no live housing prices. Introduction drafts are never sent automatically. Real Google OAuth round-trip verification requires the production OAuth credentials and a user sign-in.
 
-| Value | Purpose |
-| --- | --- |
-| `GOOGLE_PLACES_API_KEY` | Google Places API (New) live restaurant and social-space discovery |
-| `OPENAI_API_KEY` | Optional AI story reading and voice transcription |
-| `OPENAI_MODEL` | Account-supported Responses structured outputs model |
-| `OPENAI_TRANSCRIPTION_MODEL` | Account-supported transcription model |
+## Current public release
 
-Model names and keys are not guessed. The existing four structured AI adapters are preserved; the new dashboard uses local choice-based planning and editable templates by default. Never commit real keys or send them through chat. Example keys in `.env.example` are blank.
+Public URL: https://hub71ai-team-horse.vercel.app
 
-## GitHub and publication
+Email and password signup is enabled. Google login is optional and deferred. The Abu Dhabi assistant supports three guest questions per network per day, with a persistent shared cap of 50 guest questions daily. Signed-in users share the ten daily planner requests. Password resets and email verification need an email provider before they can be enabled.
 
-Requested repository: https://github.com/huzaifasaad2004/hub71ai--team-horse-.git. The CI template in `docs/ci-template.yml` checks TypeScript, tests and the Worker build. The existing GitHub token has repository access but no workflow scope, so the template is not installed as an active workflow. See the handoff for push status and branch; do not claim source is published until a remote SHA has been checked.
-
-Reuse the existing private Sites identity in `.openai/hosting.json`: `appgprj_6abf4fd5d16081919c3bd18d70db1bb3`. Do not register another site. Sites publication uses the bundled `site-workflow.mjs` with fresh credentials passed through hidden stdin, followed by native private deployment and terminal status verification. GitHub source publication does not itself deploy the Worker or configure Google login.
-
-## Data and imagery
-
-Personal details remain in memory. Public career/education summaries alone use isolate-local caches retaining original fetch timestamps. Places responses are not durably cached. Discovery and audio endpoints enforce same-origin browser requests, bounded bodies and isolate concurrency limits. Global quota controls belong to the hosting/provider configuration.
-
-Licensed source photographs are served from Wikimedia and credited in the UI. Skyline: giggel, CC BY 3.0. Saadiyat beach: Florian Kriechbaumer, CC BY-SA 4.0. Louvre canopy: Francisco Anzola, CC BY 3.0. Coffee still life: Pixabay, CC0; representative rather than a named local venue. Photographs are cropped by CSS, and the beach adaptation remains under CC BY-SA 4.0. No generated photos are used.
-
-Privacy and terms information is available at `/privacy` and `/terms`. Drafts remain draft-only; there are no emails, applications, bookings or government submissions.
+The family plan prioritises partner careers and friendships, children’s settling-in routines, and practical preparation before arrival. Plans and completion are saved explicitly to the signed-in user’s account.

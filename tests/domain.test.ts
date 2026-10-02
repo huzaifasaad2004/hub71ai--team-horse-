@@ -1,4 +1,5 @@
 import {blankProfile,choiceBridge,choiceWeek,choiceDraft,defaultLifestyle,rankedAreas} from '../lib/lifestyle';
+import {snapshotSchema,saveSchema} from '../lib/snapshot';
 import {findPlaces} from '../lib/discovery';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,3 +31,8 @@ test('Choice planning supports multiple partners and children without sample ide
 });
 test('Area matching changes with vibe choices and does not invent matches',()=>{assert.equal(rankedAreas({...defaultLifestyle,vibes:['Entertainment']})[0].id,'yas');assert.equal(rankedAreas({...defaultLifestyle,vibes:['Arts & culture']})[0].id,'saadiyat');assert.ok(rankedAreas({...defaultLifestyle,vibes:['Custom atmosphere']}).every(a=>a.matches.length===0));});
 test('Places search stays on the fixed provider and removes closed or unsafe results',async()=>{const original=globalThis.fetch;try{globalThis.fetch=async(url,options)=>{assert.equal(url,'https://places.googleapis.com/v1/places:searchText');const body=JSON.parse(String(options?.body));assert.ok(body.textQuery.includes('Japanese'));assert.equal(body.regionCode,'AE');assert.ok(body.locationRestriction);return Response.json({places:[{id:'ok',displayName:{text:'Real place'},googleMapsUri:'https://maps.google.com/?cid=1',formattedAddress:'Abu Dhabi',rating:4.3,userRatingCount:20},{id:'closed',displayName:{text:'Closed'},googleMapsUri:'https://maps.google.com/?cid=2',businessStatus:'CLOSED_PERMANENTLY'},{id:'bad',displayName:{text:'Bad'},googleMapsUri:'javascript:alert(1)'}]});};const result=await findPlaces({kind:'food',topic:'Japanese',area:'',diet:['Vegetarian'],avoid:[],budget:'Everyday'},'test-key',AbortSignal.timeout(1000));assert.deepEqual(result.map(p=>p.id),['ok']);}finally{globalThis.fetch=original;}});
+
+test('Saved snapshots reject dangling household references, foreign identity and cached venue data',()=>{
+ const b=buildSample(),w=buildWeek(b);const snapshot={profile:sampleProfile,prefs:defaultLifestyle,bridge:b,week:w,fullWeek:w,draft:null,saved:[],completed:[],prepared:[],lighter:false,mode:'sample',focus:'everyone',selected:'sara',savedPlaceIds:['ChIJtest'],savedAreas:['saadiyat']};
+ snapshotSchema.parse(snapshot);assert.throws(()=>saveSchema.parse({version:0,snapshot,userId:'someone-else'}));assert.throws(()=>snapshotSchema.parse({...snapshot,savedPlaces:[{name:'Venue'}]}));assert.throws(()=>snapshotSchema.parse({...snapshot,completed:['unknown-task']}));assert.throws(()=>snapshotSchema.parse({...snapshot,bridge:{...b,profileId:'other-household'}}));assert.throws(()=>snapshotSchema.parse({...snapshot,savedPlaceIds:['https://bad.example']}));
+});
