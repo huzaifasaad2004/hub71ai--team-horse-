@@ -36,3 +36,11 @@ test('Saved snapshots reject dangling household references, foreign identity and
  const b=buildSample(),w=buildWeek(b);const snapshot={profile:sampleProfile,prefs:defaultLifestyle,bridge:b,week:w,fullWeek:w,draft:null,saved:[],completed:[],prepared:[],lighter:false,mode:'sample',focus:'everyone',selected:'sara',savedPlaceIds:['ChIJtest'],savedAreas:['saadiyat']};
  snapshotSchema.parse(snapshot);assert.throws(()=>saveSchema.parse({version:0,snapshot,userId:'someone-else'}));assert.throws(()=>snapshotSchema.parse({...snapshot,savedPlaces:[{name:'Venue'}]}));assert.throws(()=>snapshotSchema.parse({...snapshot,completed:['unknown-task']}));assert.throws(()=>snapshotSchema.parse({...snapshot,bridge:{...b,profileId:'other-household'}}));assert.throws(()=>snapshotSchema.parse({...snapshot,savedPlaceIds:['https://bad.example']}));
 });
+
+
+test('Partner career preparation and checked draft steps survive account save',()=>{
+ const p=structuredClone(sampleProfile),b=choiceBridge(p,defaultLifestyle,[]),w=choiceWeek(b),r=b.recommendations.find(r=>r.actionIntent==='portfolio_checklist')!,draft=choiceDraft(r,p,'warm','');
+ assert.ok(r.personIds.includes(p.people.find(p=>p.role==='partner')!.id));
+ const snapshot={profile:p,prefs:defaultLifestyle,bridge:b,week:w,fullWeek:w,draft,saved:[],completed:[],prepared:[draft.id+'-0'],lighter:false,mode:'local',focus:'everyone',selected:p.people[0].id,savedPlaceIds:[],savedAreas:[]};
+ snapshotSchema.parse(snapshot);assert.throws(()=>snapshotSchema.parse({...snapshot,prepared:['another-draft-0']}));
+});
