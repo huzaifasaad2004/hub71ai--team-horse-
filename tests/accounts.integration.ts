@@ -9,7 +9,7 @@ import {paidAccess,signedInUser} from '../lib/access';
 import {getAuth} from '../lib/auth';
 import {buildSample,buildWeek,sampleProfile} from '../lib/fixtures';
 import {defaultLifestyle} from '../lib/lifestyle';
-const db=getDb(),ids=[randomUUID(),randomUUID()],tokens=[randomUUID(),randomUUID()];
+const db=getDb();const ids:string[]=[randomUUID(),randomUUID()],tokens=[randomUUID(),randomUUID()];
 const origin=process.env.BETTER_AUTH_URL!;
 const cookie=(token:string)=>'better-auth.session_token='+encodeURIComponent(token+'.'+createHmac('sha256',process.env.BETTER_AUTH_SECRET!).update(token).digest('base64'));
 function request(method:string,owner?:number,body?:unknown,extra:Record<string,string>={}){return new Request(origin+'/api/household',{method,headers:{'x-forwarded-for':'127.0.0.1',Origin:origin,'Content-Type':'application/json',...(owner===undefined?{}:{Cookie:cookie(tokens[owner])}),...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});}
