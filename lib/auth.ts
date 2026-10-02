@@ -7,6 +7,7 @@ const createAuth=()=>betterAuth({appName:'BRIDGE',baseURL:process.env.BETTER_AUT
  database:drizzleAdapter(getDb(),{provider:'pg',schema}),
  emailAndPassword:{enabled:true,minPasswordLength:8,maxPasswordLength:128},
  socialProviders:process.env.GOOGLE_CLIENT_ID&&process.env.GOOGLE_CLIENT_SECRET?{google:{clientId:process.env.GOOGLE_CLIENT_ID,clientSecret:process.env.GOOGLE_CLIENT_SECRET,prompt:'select_account'}}:{},
+ advanced:{ipAddress:{ipAddressHeaders:['x-vercel-forwarded-for']}},
  account:{encryptOAuthTokens:true},session:{expiresIn:60*60*24*7,updateAge:60*60*24},
  rateLimit:{enabled:true,storage:'database',window:60,max:30},
 });
